@@ -1,0 +1,76 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                    Int      @id @default(autoincrement())
+  email                 String?  @unique
+  name                  String? 
+  number                String  @unique
+  password              String
+  Balance               Balance[]
+  OnRampTransaction     OnRampTransaction[]
+  sentTransfer          p2pTransfer[]     @relation(name: "fromUserRelation")
+  receivedTransfer      p2pTransfer[]     @relation(name: "toUserRelation")
+}
+
+model p2pTransfer {
+  id        Int     @id @default(autoincrement())
+  amount    Int 
+  timestamp DateTime
+  fromUserId  Int 
+  fromUser    User @relation(name: "fromUserRelation", fields: [fromUserId],references: [id]) 
+  toUserId    Int
+  toUser      User @relation(name: "toUserRelation", fields: [toUserId],references: [id]) 
+}
+model Merchant {
+  id          Int     @id @default(autoincrement())
+  email       String  @unique
+  name        String?
+  auth_type   AuthType   
+}
+
+model Balance {
+  id          Int     @id @default(autoincrement())
+  // user id 
+  userId      Int @unique
+  // The user has this much amount of money in their wallet 
+  amount      Int 
+  locked      Int 
+  // foreign key declaration 
+  user        User @relation(fields: [userId], references: [id] )
+}
+// Storing each transaction details
+model OnRampTransaction {
+  id          Int     @id @default(autoincrement())
+  // Shows the current status whether the transaction is successful,falied or currently processing
+  status      OnRampStatus 
+  token       String @unique 
+  provider    String 
+  amount      Int 
+  startTime   DateTime 
+  userId      Int 
+  user        User @relation(fields: [userId],references: [id])
+}
+
+enum AuthType {
+  Google
+  Github
+}
+
+enum OnRampStatus {
+  Success 
+  Failure 
+  Processing
+}
