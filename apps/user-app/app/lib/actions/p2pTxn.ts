@@ -44,6 +44,7 @@ export async function p2pTransfer(to:string, amount:number){
             // if did the same thing in mongodb we dont have to lock because while mongodb is performing a transcation
             // and before it gets completed and another request is accessing the same resource it reverts back but postgres
             // doesn't have that 
+            console.log("Inside of transaction");
             await tx.$queryRaw`SELECT * FROM "Balance" WHERE "userId"=${sender.id} FOR UPDATE`
             const bal =await tx.balance.findUnique({
                 where:{userId:sender.id}
